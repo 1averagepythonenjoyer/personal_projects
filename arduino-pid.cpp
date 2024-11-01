@@ -10,6 +10,7 @@ void setup() {
   // put your setup code here, to run once:
   qtr.setTypeAnalog();
   qtr.setSensorPins((const uint8_t[]){A1, A2, A3, A4, A5}, SensorCount);
+
   
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH); //built-in LED on the arduino tells us that the steup is complete. 
