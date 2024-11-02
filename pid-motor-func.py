@@ -1,4 +1,5 @@
 import RPi.GPIO as GPIO # remember to install
+            
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BOARD)
 
@@ -30,14 +31,6 @@ GPIO.output(IN4, GPIO.LOW)
 RMcorrection = 1.0 #to offset drift of motors (1 motor spinning faster than the other: left motor spins faster than the right I think)
 LMcorrection = 0.95
 
-########################################## this is only for remote control, don't need it I think
-def yawthrottle(yaw, throttle, speedfactor):   #yaw and throttle need to be floats from -1.0 to 1.0
-    left = (throttle + yaw)
-    right = (throttle - yaw)
-    scale = float(100) / max(1, abs(left), abs(right))
-    setmotor(right*scale, left*scale, speedfactor)
-############################################
-
 def setmotor(right_power, left_power, speedfactor):
     print("Right power:", right_power)
 
@@ -68,4 +61,13 @@ def setmotor(right_power, left_power, speedfactor):
         PWMb.ChangeDutyCycle(int(abs(left_power) * LMcorrection*speedfactor))
     print("Right Duty:", abs(right_power) * RMcorrection)
     print("Left Duty: ", abs(left_power) * LMcorrection)
+
+def yawthrottle(yaw, throttle, speedfactor):   #yaw and throttle need to be floats from -1.0 to 1.0
+    left = (throttle + yaw)
+    right = (throttle - yaw)
+    scale = float(100) / max(1, abs(left), abs(right))
+    setmotor(right*scale, left*scale, speedfactor)
+
+
+
 
