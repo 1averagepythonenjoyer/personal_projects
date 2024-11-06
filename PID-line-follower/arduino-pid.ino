@@ -57,12 +57,19 @@ float PID(float error) {   //PID algorithm function.
 void loop() {
   uint16_t position = qtr.readLineBlack(sensorValues);  //returns value of 1000-5000, where 1000 means the line is directly below the left-most sensor, and  5000 the same for the right-most sensor. 
   float error = 3000 - position; //We want it directly below the middle sensor, so the 3rd one
-  float PID(float error);
-
-  Serial.println("Line's position is: "); Serial.print(position); //sends position values to RPi using serial , which is connected via usb 
-  Serial.println("Error is: "); Serial.print(error);  //ditto but for error
-  Serial.println("PID value is: "); Serial.print(PIDvalue); //final value to be used for steering
-  Serial.println("##########################################") //just a separator to make it visually easier to read each data point
+  
+  float PID(float error); 
+  
+  //Serial.println("Line's position is: ");  //only for debugging 
+  Serial.println(position); //sends position values to RPi using serial , which is connected via usb 
+  
+  //Serial.println("Error is: ");   //only for debugging 
+  Serial.println(error);  //ditto but for error
+  
+  //Serial.println("PID value is: ");  `   //only for debugging 
+  Serial.println(PIDvalue); //final value to be used for steering
+  
+  //Serial.println("##########################################") // only for debugging: just a separator to make it visually easier to read each data point
   delay(250); //prevents serial monitor going ballistic
 }
 
