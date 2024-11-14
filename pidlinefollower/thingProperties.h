@@ -8,6 +8,7 @@ const char DEVICE_LOGIN_NAME[]  = "14fa49af-e658-4df6-a6b7-66824f4e5c1c";
 const char SSID[]               = SECRET_SSID;    // Network SSID (name)
 const char PASS[]               = SECRET_OPTIONAL_PASS;    // Network password (use for WPA, or use as key for WEP)
 const char DEVICE_KEY[]  = SECRET_DEVICE_KEY;    // Secret device password
+//these are all referenced in a separate file on Arduino Cloud,but I won't upload that because I don't want to give everyone my ssid
 
 void onKdadjChange();
 void onKiadjChange();
