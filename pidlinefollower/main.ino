@@ -3,16 +3,19 @@
 
 QTRSensors qtr; //makes it easier to type funcs 
 
-
 float lspeed; //initial speed variables
 float rspeed;
-
 float lspeedfinal;//final adjusted speed variables for motors
 float rspeedfinal;
 
 float Kd; //final pid gain values
 float Ki;
-float Kp;
+float Kp; 
+float PIDvalue;  
+
+float multiP = 0.0;  //scaling vals: can be changed to make constant adjustment less sensitive.
+float multiI = 0.0;
+float multiD = 0.0;
 
 const uint8_t SensorCount = 5;  //declare number of sensors in the format the library likes
 uint16_t sensorValues[SensorCount]; 
@@ -20,13 +23,6 @@ int threshold[SensorCount]; //other setup functions
 
 uint16_t position;  
 float previousError; //for derivative gain value
-
-//declare variables 
-float PIDvalue;  
-
-float multiP = 0.0;  //scaling vals: can be changed to make constant adjustment less sensitive.
-float multiI = 0.0;
-float multiD = 0.0;
 
 void setup() {
   initProperties(); //initialise values from thingproperties.h
