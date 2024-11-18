@@ -61,10 +61,10 @@ void setup() {
       
       //calibration start
   digitalWrite(D12, HIGH);  //turn on led, connected to digital pin 12, to indicate we are calibrating
-  for (uint16_t i = 0; i < 5; i++) //repeat 5 times
+  for (uint16_t i = 0; i < 250; i++) //repeat 250 times. total time roughly 5s, not including wifi connection time.
   {
     qtr.calibrate();  //must ensure that sensors are placed at height which will be used for the line follow sequence
-    delay(200);
+    delay(20);
   }
   digitalWrite(D12, LOW);
   //calibration end
