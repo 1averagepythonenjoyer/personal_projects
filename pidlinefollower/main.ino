@@ -1,115 +1,112 @@
-#include "thingProperties.h"
+#include "thingProperties.h" //
 #include <QTRSensors.h>  //install library
 
-#include <L298N.h>
 QTRSensors qtr; //makes it easier to type funcs 
 
-#define EN_A 2
-#define IN1_A 3
-#define IN2_A 4
 
-#define EN_B 5
-#define IN1_B 6
-#define IN2_B 7
+float lspeed; //initial speed variables
+float rspeed;
 
-float RMcorrection = 1.0;
-float LMcorrection = 0.95;
-float lspeed;
-float lspeedfinal;
+float lspeedfinal;//final adjusted speed variables for motors
 float rspeedfinal;
-float Kd;
+
+float Kd; //final pid gain values
 float Ki;
 float Kp;
 
 const uint8_t SensorCount = 5;  //declare number of sensors in the format the library likes
-uint16_t sensorValues[SensorCount];
-int threshold[SensorCount];
+uint16_t sensorValues[SensorCount]; 
+int threshold[SensorCount]; //other setup functions
 
-uint16_t position;
-float previousError;
+uint16_t position;  
+float previousError; //for derivative gain value
 
 //declare variables 
 float PIDvalue;  
 
-float multiP = 0.0;  //scaling vals
+float multiP = 0.0;  //scaling vals: can be changed to make constant adjustment less sensitive.
 float multiI = 0.0;
 float multiD = 0.0;
 
-L298N motorR(EN_A, IN1_A, IN2_A); //initiate motor objects
-L298N motorL(EN_B, IN1_B, IN2_B);
-
-
 void setup() {
-  initProperties();
+  initProperties(); //initialise values from thingproperties.h
 
   // Connect to Arduino IoT Cloud
   ArduinoCloud.begin(ArduinoIoTPreferredConnection);
   setDebugMessageLevel(2);
-  ArduinoCloud.printDebugInfo();
+  ArduinoCloud.printDebugInfo();  //sends info to debug monitor 
 
   qtr.setTypeAnalog();
   qtr.setSensorPins((const uint8_t[]){ A1, A2, A3, A4, A5 }, SensorCount);
-  pinMode(D12, OUTPUT);
+  pinMode(D12, OUTPUT); //for leds to check when calibration is finished
   pinMode(D13, OUTPUT);
+
+  //motor controller pins
+  pinMode(2, OUTPUT); //ENA
+  pinMode(3, OUTPUT); //IN1
+  pinMode(4, OUTPUT); //IN2
+
+  pinMode(5, OUTPUT); //ENB
+  pinMode(6, OUTPUT); //IN1
+  pinMode(7, OUTPUT); //IN2
+  
+  //hbridge control
+  digitalWrite(3, HIGH);  //set motors to forward always: we won't ever need to go backwards. 
+  digitalWrite(4, LOW);
+
+  digitalWrite(6, HIGH);
+  digitalWrite(7, LOW);
   
   if ((ArduinoCloud.connected() == 0))  {
     digitalWrite(D13, HIGH);
-  }else {
+  }
+    else {
+      digitalWrite(D13, LOW);
+      
       //calibration start
-  digitalWrite(D12, HIGH);          //turn on led, connected to digital pin 12, to indicate we are calibrating
-  for (uint16_t i = 0; i < 5; i++)  //400 repeats, so a few minutes worth of calibration
+  digitalWrite(D12, HIGH);  //turn on led, connected to digital pin 12, to indicate we are calibrating
+  for (uint16_t i = 0; i < 5; i++) //repeat 5 times
   {
     qtr.calibrate();  //must ensure that sensors are placed at height which will be used for the line follow sequence
-    delay(250);
+    delay(200);
   }
-  }
-  digitalWrite(D12, LOW);
-  delay(500);
-  digitalWrite(D12, HIGH);
-  delay(500);
   digitalWrite(D12, LOW);
   //calibration end
+  }
 }
 
+
 void loop() {
-  ArduinoCloud.update();
+  ArduinoCloud.update();  // send vals back and forth 
   mainrobot();
 }
 
-void mainrobot() {
-  position = qtr.readLineBlack(sensorValues);
-  float error = 2000 - position;
-  while (sensorValues[0]>=970 && sensorValues[1]>=970 && sensorValues[2]>=980 && sensorValues[3]>=970 && sensorValues[4]>=970){ 
-    if (previousError>0){       //Turn left if the line was to the left before it left the line
-      movemotor(-230,230);
-    }
-    else {
-      movemotor(230,-230); // Else turn right
-    }
-    position = qtr.readLineBlack(sensorValues);
 
-    float PID(float error);
+void Lmove(float lspeed) {   //prevents overshoot. basic motor functions 
+  if (lspeed > 255) {
+    lspeed = 255;
   }
+  if (lspeed < -255) {
+    lspeed = -255;
+  }
+  analogWrite(5, lspeed);
 }
 
-void movemotor(int left, int right) {
-  if (right > 0){
-    motorR.setSpeed(right * RMcorrection);
-    motorR.forward();
+void Rmove(float rspeed) {
+  if (rspeed > 255) {
+    rspeed = 255;
   }
-  else {
-    motorR.setSpeed(right * RMcorrection);
-    motorR.backward();
+  if (rspeed < -255) {
+    rspeed = -255;
   }
-  if (left > 0){
-    motorL.setSpeed(left * LMcorrection);
-    motorL.forward();
-  }
-  else {
-    motorL.setSpeed(left * LMcorrection);
-    motorL.backward();
-  }
+  analogWrite(2, rspeed);
 }
+
+void movemotor(float lspeed, float rspeed) {
+  Lmove(lspeed);
+  Rmove(rspeed);
+}
+
 
 float PID(float error) {   //PID algorithm function. 
   float previousError = error;
@@ -127,34 +124,34 @@ float PID(float error) {   //PID algorithm function.
   lspeedfinal = lspeed + PIDvalue;
   rspeedfinal = lspeed - PIDvalue;
 
-  if (lspeedfinal > 255){ //prevents overshoot
-    lspeedfinal = 255;
-  }  
-  if (lspeedfinal < -255){
-    lspeedfinal = -255;
-  }
-  if (rspeedfinal > 255) {
-    rspeedfinal = 255;
-  }
-  if (rspeedfinal  < -255) {
-    rspeedfinal = -255;
-  }
   movemotor(lspeedfinal, rspeedfinal);
-  return PIDvalue;
+  return PIDvalue; //for debugging if needed
 }
 
 
+void mainrobot() {
+  position = qtr.readLineBlack(sensorValues);  //read values
+  float error = 2000 - position;   
+  while (sensorValues[0]>=970 && sensorValues[1]>=970 && sensorValues[2]>=980 && sensorValues[3]>=970 && sensorValues[4]>=970){ 
+    if(previousError>0){       //Turn left if the line was to the left before it deviated from the line
+      movemotor(-230,230);
+    }
+    else{
+      movemotor(230,-230); // Else turn right
+    }
+    position = qtr.readLineBlack(sensorValues);
 
+    float PID(float error);
+  }
+}
 
+//update read/write cloud variables
 void onKdadjChange()  {
   Kd = Kdadj;
 }
-
 void onKiadjChange()  {
   Ki = Kiadj;
 }
-
-
 void onKpadjChange()  {
   Kp = Kpadj;
 }
