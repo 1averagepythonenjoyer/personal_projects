@@ -1,4 +1,4 @@
-#include "thingProperties.h" //
+#include "thingProperties.h" //i did not include this in the github for security reasons
 #include <QTRSensors.h>  //install library
 
 QTRSensors qtr; //makes it easier to type funcs 
