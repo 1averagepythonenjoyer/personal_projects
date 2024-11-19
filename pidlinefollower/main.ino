@@ -31,12 +31,6 @@ void setup() {
   ArduinoCloud.begin(ArduinoIoTPreferredConnection);
   setDebugMessageLevel(2);
   ArduinoCloud.printDebugInfo();  //sends info to debug monitor 
-
-  qtr.setTypeAnalog();
-  qtr.setSensorPins((const uint8_t[]){ A1, A2, A3, A4, A5 }, SensorCount);
-  pinMode(D12, OUTPUT); //for leds to check when calibration is finished
-  pinMode(D13, OUTPUT);
-
   //motor controller pins
   pinMode(2, OUTPUT); //ENA
   pinMode(3, OUTPUT); //IN1
@@ -52,14 +46,18 @@ void setup() {
 
   digitalWrite(6, HIGH);
   digitalWrite(7, LOW);
+
+  qtr.setTypeAnalog();//initialise sensors. 
+  qtr.setSensorPins((const uint8_t[]){ A1, A2, A3, A4, A5 }, SensorCount);
+  pinMode(D12, OUTPUT); //for leds to check when calibration is finished
+  pinMode(D13, OUTPUT);
   
   if ((ArduinoCloud.connected() == 0))  {
     digitalWrite(D13, HIGH);
-  }
-    else {
-      digitalWrite(D13, LOW);
+  }else {
+  digitalWrite(D13, LOW);
       
-      //calibration start
+  //calibration start
   digitalWrite(D12, HIGH);  //turn on led, connected to digital pin 12, to indicate we are calibrating
   for (uint16_t i = 0; i < 250; i++) //repeat 250 times. total time roughly 5s, not including wifi connection time.
   {
