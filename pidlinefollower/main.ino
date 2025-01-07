@@ -21,6 +21,10 @@ const uint8_t SensorCount = 5;  //declare number of sensors in the format the li
 uint16_t sensorValues[SensorCount]; 
 int threshold[SensorCount]; //other setup functions
 
+unsigned long startMillis;  //for timing purposes. using delay() would mess up the board's timing + cloud updates
+unsigned long currentMillis;
+const unsigned long period = 50;  //ms 
+
 uint16_t position;  
 float previousError; //for derivative gain value
 
@@ -52,20 +56,26 @@ void setup() {
   pinMode(D12, OUTPUT); //for leds to check when calibration is finished
   pinMode(D13, OUTPUT);
   
-  if ((ArduinoCloud.connected() == 0))  {
+  while (ArduinoCloud.connected() == 0)  {
     digitalWrite(D13, HIGH);
-  }else {
-  digitalWrite(D13, LOW);
-      
-  //calibration start
-  digitalWrite(D12, HIGH);  //turn on led, connected to digital pin 12, to indicate we are calibrating
-  for (uint16_t i = 0; i < 250; i++) //repeat 250 times. total time roughly 5s, not including wifi connection time.
-  {
-    qtr.calibrate();  //must ensure that sensors are placed at height which will be used for the line follow sequence
-    delay(20);
+    delay(500);
+  }
+  while (ArduinoCloud.connected() == 1){ //if connected
+    digitalWrite(D13, LOW);// turn off LED and 
+        
+    //start calibration
+    digitalWrite(D12, HIGH);  //turn on led, connected to digital pin 12, to indicate we are calibrating
+    for (uint16_t i = 0; i < 250; i++) //repeat 250 times.
+    {
+      currentMillis = millis();  //get the current "time" (actually the number of milliseconds since the program started)
+      if (currentMillis - startMillis >= period)  //test whether the period has elapsed
+        {
+          qtr.calibrate();  //must ensure that sensors are placed at height which will be used for the line follow sequence
+          startMillis = currentMillis;  //IMPORTANT to save the start time of the current LED state.
+    }
   }
   digitalWrite(D12, LOW);
-  //calibration end
+  //end calibration
   }
 }
 
